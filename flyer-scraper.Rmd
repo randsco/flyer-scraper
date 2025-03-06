@@ -65,6 +65,18 @@ getElementAttribute <- function(elements){
 
 
 ```{r}
+# Initialize tibble
+flyers <- tibble(product=character(), 
+             quantity=character(), 
+             price=character(), 
+             weight=character(), 
+             description=character(), 
+             store=character(), 
+             validity=character())
+```
+
+
+```{r}
 # Open browser
 rem_driver <- remoteDriver(remoteServerAddr = 'localhost',
                            browserName = 'chrome',
@@ -73,18 +85,6 @@ rem_driver$open()
 
 rem_driver$setTimeout(type = "implicit", milliseconds = 500)
 
-```
-
-
-```{r}
-# Initialize df
-flyers <- tibble(product=character(), 
-             quantity=character(), 
-             price=character(), 
-             weight=character(), 
-             description=character(), 
-             store=character(), 
-             validity=character())
 ```
 
 
