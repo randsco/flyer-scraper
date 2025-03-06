@@ -1,0 +1,171 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code.
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*.
+
+```{r}
+library(dplyr)
+library(rvest)
+library(RSelenium)
+
+wetest <- function(sleepmin,sleepmax){
+  remDr <- get("rem_driver",envir=globalenv())
+  webElemtest <-NULL
+  while(is.null(webElemtest)){
+    webElemtest <- tryCatch({remDr$findElement(using = 'css', "body")},
+                            error = function(e){NULL})
+  }
+  randsleep <- sample(seq(sleepmin, sleepmax, by = 0.001), 1)
+  Sys.sleep(randsleep)
+}
+
+getDetailElements <- function(link, using, value){
+  elements <- tryCatch({
+    rem_driver$findElements(using = using, value = value)
+    },
+    error = function(e){
+      message(paste(e))
+      NULL
+    }
+  )
+  elements
+}
+
+getElementText <- function(elements){
+  if (length(elements) > 0) {
+      element_text <- paste(elements[[1]]$getElementText())
+    }
+    else {
+      element_text <- paste("")
+    }
+  element_text
+}
+
+getElementAttribute <- function(elements){
+  if (length(elements) > 0) {
+      element_attribute <- paste(elements[[1]]$getElementAttribute("value"))
+    }
+    else {
+      element_attribute <- paste("")
+    }
+  element_attribute
+}
+```
+
+
+```{r}
+# Open browser
+rem_driver <- remoteDriver(remoteServerAddr = 'localhost',
+                           browserName = 'chrome',
+                           port=4444L)
+rem_driver$open()
+
+rem_driver$setTimeout(type = "implicit", milliseconds = 500)
+
+```
+
+```{r}
+# Initialize database
+flyers20250227 <- tibble(product=character(), 
+             quantity=character(), 
+             price=character(), 
+             weight=character(), 
+             description=character(), 
+             store=character(), 
+             validity=character())
+```
+
+
+```{r}
+# Flyer list to get product links
+flyer_list <- list("https://flipp.com/en-ca/mississauga-on/flyer/7154371-fresh-palace-weekly?postal_code=L5B0C2",
+                   "https://flipp.com/en-ca/mississauga-on/flyer/7151682-tandt-supermarket-weekly-flyer?postal_code=L5B0C2",
+                   "https://flipp.com/en-ca/mississauga-on/flyer/7154252-yuan-ming-supermarket-weekly?postal_code=L5B0C2",
+                   "https://flipp.com/en-ca/mississauga-on/flyer/7154235-btrust-supermarket-weekly?postal_code=L5B0C2",
+                   "https://flipp.com/en-ca/mississauga-on/flyer/7155645-arz-fine-foods-weekly?postal_code=L5B0C2",
+                   "https://flipp.com/en-ca/mississauga-on/flyer/7154566-alnejmah-supermarket-weekly?postal_code=L5B0C2",
+                   "https://flipp.com/en-ca/mississauga-on/flyer/7148648-al-emaan-weekly?postal_code=L5B0C2",
+                   "https://flipp.com/en-ca/mississauga-on/flyer/7154250-terra-foodmart-weekly?postal_code=L5B0C2",
+                   "https://flipp.com/en-ca/mississauga-on/flyer/7154483-oceans-fresh-food-market-weekly?postal_code=L5B0C2"
+                   )
+
+for (flyer in flyer_list){
+  # Navigate to flyer
+  rem_driver$navigate(flyer)
+  wetest(sleepmin=3,sleepmax=5)
+  
+  # Get store name
+  elem_store <- rem_driver$findElements(using = 'class', value='subtitle')
+  store_name <- paste(elem_store[[1]]$getElementText())
+  
+  # Get validity
+  elem_validity <- rem_driver$findElements(using = 'class', value='validity')
+  validity <- paste(elem_validity[[1]]$getElementText())
+  
+  # Find products
+  elem_products <- rem_driver$findElements(using = 'class', value='item-container')
+  wetest(sleepmin=3,sleepmax=5)
+  product_list = list()
+  for (element in elem_products){
+    product_list = append(product_list, paste("https://flipp.com", element$getElementAttribute("href"), sep=""))
+  }
+  
+  # Get details of each product and add to database
+  for (link in product_list){
+    wetest(sleepmin=1,sleepmax=2)
+    
+    # Go to product link
+    rem_driver$navigate(link)
+    
+    # Get name
+    found_elements <- getDetailElements(link, 'xpath', '//*[contains(concat( " ", @class, " " ), concat( " ", "title", " " ))]//span')
+    product_name <- getElementText(found_elements)
+    
+    # Get pre price
+    found_elements <- getDetailElements(link, 'class', 'pre-price-text')
+    product_preprice <- getElementText(found_elements)
+    
+    # Get price
+    found_elements <- getDetailElements(link, 'tag name', 'flipp-price')
+    product_price <- getElementAttribute(found_elements)
+    
+    # Get post price
+    found_elements <- getDetailElements(link, 'class', 'price-text')
+    product_postprice <- getElementText(found_elements)
+    
+    # Get Description
+    found_elements <- getDetailElements(link, 'xpath', '//*[contains(concat( " ", @class, " " ), concat( " ", "description", " " ))]//span')
+    product_desc <- getElementText(found_elements)
+    
+    # Add to database
+    flyers20250227 <- flyers20250227 %>% add_row(product=product_name, 
+                   quantity=product_preprice, 
+                   price=product_price, 
+                   weight=product_postprice, 
+                   description=product_desc, 
+                   store=store_name, 
+                   validity=validity)
+  }
+}
+
+# Match quantities ("#/" or "# for"): "^\d[\/\ ]"
+# Match units: "[\d\ /.]+[mM][lL]|[\d\ /.]+[gG]|[\d\ /.]+[lL][bB][sS]|[\d\ /.]+[eE][aA]|[\d\ /.]+[uU][nN]|[\d\ /.]+[kK][gG]|[\d\ /.]+[pP][kK][gG]"
+
+```
+
+
+```{r}
+flyers_cleaned <- flyers %>% distinct(.keep_all=TRUE)
+combined <- rbind(db2, flyers_cleaned)
+write.table(combined, file = "combined.csv", sep=",", eol="\n", row.names=FALSE, qmethod="double")
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Cmd+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
