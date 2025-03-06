@@ -4,8 +4,7 @@ Scrapes flyers of ambiguous origin.
 
 ## Prerequisites
 ### Download and install Google Chrome
-1. Download and install Google Chrome for your platform if you do not already have it installed. Otherwise, [download and add chromedriver to the project](#Download-and-add-chromedriver-to-the-project).
-1. [Download the latest version of Google Chrome](https://www.google.com/chrome/) for your operating system.
+1. If you do not have Google Chrome installed, [download the latest version of Google Chrome](https://www.google.com/chrome/) for your operating system. Otherwise, [download and add chromedriver to the project](#Download-and-add-chromedriver-to-the-project).
 1. Install following the [Google Chrome installation instructions](https://support.google.com/chrome/answer/95346?hl=en&co=GENIE.Platform%3DDesktop) for your operating system.
 ### Download and add chromedriver to the project
 1. [Download chromedriver](https://googlechromelabs.github.io/chrome-for-testing/) appropriate for your operating system.
