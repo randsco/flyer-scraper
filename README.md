@@ -11,7 +11,7 @@ Scrapes flyers of ambiguous origin.
 1. Extract the chromedriver files into the same folder as flyer-scraper.Rmd.
 ### Download and install dependencies and add Selenium standalone server to the project
 1. [Install Java](https://www.java.com/en/download/help/download_options.html) for your operating system.
-1. [Download the Selenium standalone server](https://selenium-release.storage.googleapis.com/index.html?path=3.5/)
+1. [Download the Selenium standalone server](https://selenium-release.storage.googleapis.com/index.html?path=3.5/).
 1. Move the Selenium standalone server .jar file into the same folder as flyer-scraper.Rmd.
 
 ## Run the flyer scraper
